@@ -68,7 +68,7 @@ boolean CheckerDT_Node_isValid(Node_T oNNode) {
       then there is an error in the node's children structure */
       status = Node_getChild(oNNode, index, &child);
       if(status != SUCCESS) {
-         fprintf(stderr, "cannot retrieve child %zu of node\n", index);
+         fprintf(stderr, "cannot retrieve child %lu of node\n", index);
          return FALSE;
       }
 
@@ -108,7 +108,7 @@ boolean CheckerDT_Node_isValid(Node_T oNNode) {
          fails, then there is an error in the node's children structure*/
          status = Node_getChild(oNNode, index - 1, &prevChild);
          if(status != SUCCESS) {
-            fprintf(stderr, "Could not retrieve previous child %zu of node\n", index - 1);
+            fprintf(stderr, "Could not retrieve previous child %lu of node\n", index - 1);
             return FALSE;
          }
 
@@ -127,13 +127,13 @@ boolean CheckerDT_Node_isValid(Node_T oNNode) {
 
          /* check if there are duplicate children (children have same paths)*/
          if(Path_comparePath(prevPath, childPath) == 0) {
-            fprintf(stderr, "A node has duplicate children");
+            fprintf(stderr, "A node has duplicate children\n");
             return FALSE;
          }
 
          /* check that children are ordered in lexicographic order */
          if(Path_comparePath(prevPath, childPath) > 0) {
-            fprintf(stderr, "Children are not in lexicographic order");
+            fprintf(stderr, "Children are not in lexicographic order\n");
             return FALSE;
          }
       }
@@ -195,6 +195,14 @@ static boolean CheckerDT_treeCheck(Node_T oNNode) {
       }
    }
    return TRUE;
+}
+
+/* Checks if a node is a root - parent node is null */
+static boolean CheckerDT_isRoot(Node_T oNNode, Node_T oNRoot) {
+   if(oNNode == NULL) {
+      return FALSE;
+   }
+   return (boolean)(oNNode == oNRoot && Node_getParent(oNNode) == NULL);
 }
 
 /* see checkerDT.h for specification */
