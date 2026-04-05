@@ -3,12 +3,12 @@ Assignment 4 readme File
 ------------------------------------------------------------------------
 Student 1: What is your name?
 
-
+Marina Peng
 
 ------------------------------------------------------------------------
 Student 2: What is your name?
 
-
+Allen Chen
 
 ------------------------------------------------------------------------
 Student 1: What authorized sources of information did you use to
@@ -17,7 +17,11 @@ information given in the "Policies" web page (also available on armlab
 in the file ~cos217/AuthorizedSourcesList ) to this section of the
 readme file, and edit it as appropriate.
 
-
+COS 217 lecture materials.
+COS 217 precept materials.
+COS 217 website.
+COS 217 staff in office hours.
+COS 217 staff and/or current students on Ed.
 
 ------------------------------------------------------------------------
 Student 2: What authorized sources of information did you use to
@@ -40,7 +44,7 @@ nature of the interaction, may additionally require the interaction
 being reported to the Committee on Discipline. Write "None" if you used
 no unauthorized sources of information.
 
-
+None
 
 ------------------------------------------------------------------------
 Student 2: What unauthorized sources of information did you use to
@@ -64,7 +68,7 @@ guide, enter your name in the space below the following affirmation:
 This paper represents my own work in accordance with University
 regulations.
 
-
+Marina Peng
 
 ------------------------------------------------------------------------
 Student 2: In fulfillment of the requirement from section 2.4.3 of the
@@ -82,13 +86,22 @@ Regulations in Princeton's Rights, Rules, Responsibilities guide,
 and the COS 217 Generative AI policy, disclose and describe how you
 used AI in completing this assignment:
 
-
+We used AI to help me check for some of the invariants I missed
+in part 2 of the assignment after I could not brainstorm any more
+(used it for node cannot be its own parent). 
 
 ------------------------------------------------------------------------
 Student 1: What is your assessment of the assignment? Was it helpful?
 Was it fun?
 
-
+I think the assignment was quite tedious and not being able to see
+the full source code made debugging quite hard to approach at first.
+I did not know how to use gdb efficiently, so I spent a lot of time
+on the first part. Thinking through the invariants for part 2 was
+quite helpful for understanding the code and for debugging in general.
+However, I think reading the code was quite difficult for me. I thought
+the assignment will be quite helpful for future classes through, 
+especiallly as I work to debug more. 
 
 ------------------------------------------------------------------------
 Student 2: What is your assessment of the assignment? Was it helpful?
