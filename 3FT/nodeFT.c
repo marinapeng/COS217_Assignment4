@@ -85,7 +85,6 @@ int Node_new(Path_T oPPath, Node_T oNParent, boolean bIsFile,
 
    assert(oPPath != NULL);
    assert(poNResult != NULL);
-   assert(oNParent == NULL);
 
    psNew = malloc(sizeof(struct node));
    if(psNew == NULL) {
@@ -187,10 +186,8 @@ int Node_new(Path_T oPPath, Node_T oNParent, boolean bIsFile,
    }
 
    *poNResult = psNew;
-   assert(oNParent == NULL);
    return SUCCESS;
 }
-
 
 /*
   Frees the subtree rooted at oNNode.
@@ -221,11 +218,9 @@ size_t Node_free(Node_T oNNode) {
    }
 
    /* contents pointer is client-owned, so do not free it */
-
    Path_free(oNNode->oPPath);
    free(oNNode);
    ulCount++;
-
    return ulCount;
 }
 
@@ -258,8 +253,9 @@ boolean Node_hasChild(Node_T oNParent, Path_T oPPath,
    assert(oPPath != NULL);
    assert(pulChildID != NULL);
 
-   if(oNParent->bIsFile)
+   if(oNParent->bIsFile) {
       return FALSE;
+   }
 
    return DynArray_bsearch(oNParent->oDChildren,
             (char *)Path_getPathname(oPPath), pulChildID,

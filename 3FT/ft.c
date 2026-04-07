@@ -288,7 +288,6 @@ int FT_insertFile(const char *pcPath, void *pvContents,
    size_t ulNewNodes = 0;
 
    assert(pcPath != NULL);
-   assert(pvContents!= NULL);
 
    if(!bIsInitialized)
       return INITIALIZATION_ERROR;
@@ -441,7 +440,6 @@ void *FT_replaceFileContents(const char *pcPath, void *pvNewContents,
    Node_T oNFound = NULL;
 
    assert(pcPath != NULL);
-   assert(pvNewContents != NULL);
 
    iStatus = FT_findNode(pcPath, &oNFound);
    if(iStatus != SUCCESS)
@@ -503,46 +501,41 @@ int FT_destroy(void) {
 }
 
 /*
-  Performs a pre-order traversal of the FT rooted at n, inserting each
-  visited node into DynArray_T d beginning at index i. Returns the next
-  unused index in d after all insertions.
+   Performs a pre-order traversal of the FT rooted at oNNode, inserting
+  each visited node into DynArray_T oDNodes beginning at index
+  ulNextIndex. Returns the next unused index in oDNodes after all
+  insertions.
 */
-static size_t FT_preOrderTraversal(Node_T n, DynArray_T d, size_t i) {
-   size_t c;
+static size_t FT_preOrderTraversal(Node_T oNNode, DynArray_T oDNodes,
+   size_t ulNextIndex) {
+   size_t ulChildIndex;
    size_t ulNumChildren;
 
-   assert(d != NULL);
+   assert(oDNodes != NULL);
 
-   if(n != NULL) {
+   if(oNNode != NULL) {
       Node_T oNChild = NULL;
       int iStatus;
 
-      (void)DynArray_set(d, i, n);
-      i++;
+      (void)DynArray_set(oDNodes, ulNextIndex, oNNode);
+      ulNextIndex++;
 
-      if(Node_isFile(n))
-         return i;
+      if(Node_isFile(oNNode))
+         return ulNextIndex;
 
-      ulNumChildren = Node_getNumChildren(n);
+      ulNumChildren = Node_getNumChildren(oNNode);
 
-      /* first pass: file children */
-      for(c = 0; c < ulNumChildren; c++) {
-         iStatus = Node_getChild(n, c, &oNChild);
+      /* visit children in stored lexicographic order */
+      for(ulChildIndex = 0; ulChildIndex < ulNumChildren;
+         ulChildIndex++) {
+         iStatus = Node_getChild(oNNode, ulChildIndex, &oNChild);
          assert(iStatus == SUCCESS);
-         if(Node_isFile(oNChild))
-            i = FT_preOrderTraversal(oNChild, d, i);
-      }
-
-      /* second pass: directory children */
-      for(c = 0; c < ulNumChildren; c++) {
-         iStatus = Node_getChild(n, c, &oNChild);
-         assert(iStatus == SUCCESS);
-         if(Node_isDir(oNChild))
-            i = FT_preOrderTraversal(oNChild, d, i);
+         ulNextIndex = FT_preOrderTraversal(oNChild, oDNodes,
+            ulNextIndex);
       }
    }
 
-   return i;
+   return ulNextIndex;
 }
 
 /*
