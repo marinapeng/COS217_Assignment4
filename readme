@@ -130,7 +130,22 @@ disagreements with them? Copy the critTer warnings here, and express
 your disagreement after each warning. If there are no warnings, then
 write "None."
 
+   checkerDT.c: line 23: low priority: 
+   A loop should consist of fewer than 35 lines;
+   this loop consists of 52 lines; consider refactoring
 
+   I disagree with this warning because for this loop, I am
+   checking a lot of conditions relating to the node's children,
+   which is why the loop consists of so many lines. Not only am
+   I checking that the children and its path are not null, the
+   child's parent is the node oNNode itself, and that the node
+   and child are not the same. I am also checking whether there
+   are duplicate children and that they are in lexicographic order.
+
+   I could have shortened the for loop and instead just used 2 
+   for loops, but because I use the index variable in multiple
+   parts of the code, I decided to make the loop remain a bit
+   longer. 
 
 ------------------------------------------------------------------------
 What warnings does splint generate on your Part 3 code, and what are
@@ -173,6 +188,30 @@ the error manifests itself or is "noticed" by the client.
 What are your critiques of the given DT implementations, as
 specified in Step 2.5?
 
+In dtGood.c:
+- In DT_preOrderTraversal, the parameter naming is quite questionable. 
+The parameter names n, d, and i are difficult to decode, so names like 
+oNNode, oDNodes, and ulNextIndex would be much clearer. The local
+variable c is also vague and something like ulChildIndex would 
+better show that it is looping over child positions. These changes would
+make the code a lot more readable. 
+- In DT_toString, it first builds a temporary array of nodes, then loops over
+that array multiple times to create the final string. A cleaner version could
+build the string directly during traversal instead of storing everything in
+an extra data structure first which would be more efficient. 
+AlSO:
+In DT_toString, it calls DynArray_new(ulCount), but if that returns NULL
+(a memory allocation failure), the code does not check for this and proceeds
+to call DynArray_map and DynArray_free on a NULL pointer. 
 
+In nodeDTGood.c:
+- The position of the index argument is inconsistent across functions.
+In Node_addChild, the index comes third: (parent, child, index). In Node_getChild,
+it comes second: (parent, index, result). There is no good reason for this
+inconsistency, and it makes the interface harder to read
+- In Node_new, the children array is allocated with DynArray_new(0), and later
+the node is linked into the parent with Node_addChild. However, if Node_addChild
+fails, the code frees the path and the node, but it does not free psNew->oDChildren 
+so then the children array allocation will leak memory if it fails.
 
 ------------------------------------------------------------------------
