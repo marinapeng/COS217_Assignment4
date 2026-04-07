@@ -11,36 +11,45 @@
 #include "dynarray.h"
 #include "path.h"
 
-/* Check child-related invariants for a node. */
+/* Helper function that checks child-related invariants for a node oNNode.
+Return TRUE if each child is non-NULL, that each child's parent
+pointer correctly points back to this node, that there are no
+duplicate children, and that children are in lexicographic order.
+Return FALSE otherwise. */
 static boolean CheckerDT_Node_childrenCheck(Node_T oNNode) {
    /* index variable for iterating through children */
    size_t index;
+   /* number of children of this node */
+   size_t numChildren;
+   /* previous child's path */
+   Path_T prevPath = NULL;
 
-   /* checker for node's children */
-   /* Check that each child is non-NULL, that each child's parent
-   pointer correctly points back to this node, that there are no
-   duplicate children, and that children are in lexicographic order. */
-   for(index = 0; index < Node_getNumChildren(oNNode); index++) {
+   numChildren = Node_getNumChildren(oNNode);
+
+   for(index = 0; index < numChildren; index++) {
       /* check status of retrieving children*/
       int status;
       /* child node*/
       Node_T child = NULL;
       /* child's path */
-      Path_T childPath;
+      Path_T childPath = NULL;
 
       /* retrieve child stored at the index. if the retrieval fails,
       then there is an error in the node's children structure */
       status = Node_getChild(oNNode, index, &child);
       if(status != SUCCESS) {
-         fprintf(stderr, "cannot retrieve child %lu of node\n", index);
+         fprintf(stderr, "cannot retrieve child %lu of node\n",
+                 (unsigned long)index);
          return FALSE;
       }
 
-      /* check that child is not null */
-      if(child == NULL) {
-         fprintf(stderr, "A node has a NULL child\n");
+      /* check that child or its path is not null */
+      if(child == NULL || Node_getPath(child) == NULL) {
+         fprintf(stderr, "A node has a NULL child or NULL child path \n");
          return FALSE;
       }
+
+      childPath = Node_getPath(child);
 
       /* check that the node and child are not the same */
       if(child == oNNode) {
@@ -54,42 +63,10 @@ static boolean CheckerDT_Node_childrenCheck(Node_T oNNode) {
          return FALSE;
       }
 
-      /* check that the child's path is not NULL */
-      childPath = Node_getPath(child);
-      if(childPath == NULL) {
-         fprintf(stderr, "A child has NULL path\n");
-         return FALSE;
-      }
-
       /* if there are more than 1 children:
       starting with the second child, compare each child to the one
       immediately before it to check ordering and duplicates */
       if(index > 0) {
-         Node_T prevChild = NULL;
-         Path_T prevPath;
-
-         /* retrieve child stored at the previous index. if the retrieval
-         fails, then there is an error in the node's children structure*/
-         status = Node_getChild(oNNode, index - 1, &prevChild);
-         if(status != SUCCESS) {
-            fprintf(stderr, "Could not retrieve previous child %lu of node\n",
-                    (unsigned long)(index - 1));
-            return FALSE;
-         }
-
-         /* check that the previous child is not null */
-         if(prevChild == NULL) {
-            fprintf(stderr, "A node has a NULL previous child\n");
-            return FALSE;
-         }
-
-         /* check that the previous child's path is not null */
-         prevPath = Node_getPath(prevChild);
-         if(prevPath == NULL) {
-            fprintf(stderr, "A previous child has NULL path\n");
-            return FALSE;
-         }
-
          /* check if there are duplicate children (children have same paths)*/
          if(Path_comparePath(prevPath, childPath) == 0) {
             fprintf(stderr, "A node has duplicate children\n");
@@ -102,17 +79,20 @@ static boolean CheckerDT_Node_childrenCheck(Node_T oNNode) {
             return FALSE;
          }
       }
+
+      prevPath = childPath;
    }
 
    return TRUE;
 }
 
-/* Check parent-child path relationship invariants for a node. */
+/* Check parent-child path relationship invariants for a node by 
+returning TRUE if the parent oNParent is exactly one level shallower 
+and if the parent path oPPPath is exactly the prefix of the child 
+path oPNPath and FALSE otherwise */
 static boolean CheckerDT_Node_parentPathCheck(Node_T oNParent,
    Path_T oPNPath, Path_T oPPPath) {
 
-   /* Checks if the parent is exactly one level shallower
-   and if the parent path is exactly the prefix of the child path */
    if(oNParent != NULL) {
       if(Path_getDepth(oPPPath) != Path_getDepth(oPNPath) - 1) {
          fprintf(stderr, "Parent is not exactly one level above child: (%s) (%s)\n",
@@ -186,6 +166,8 @@ boolean CheckerDT_Node_isValid(Node_T oNNode) {
 */
 static boolean CheckerDT_treeCheck(Node_T oNNode, size_t *pulCount) {
    size_t ulIndex;
+
+   assert (pulCount != NULL);
 
    if(oNNode!= NULL) {
       (*pulCount)++;
