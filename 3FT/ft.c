@@ -111,13 +111,9 @@ static int FT_traversePath(Path_T oPPath, Node_T *poNFurthest) {
 /*
   Traverses the FT to find a node with absolute path pcPath.
   Returns SUCCESS and sets *poNResult if found.
-
-  Otherwise sets *poNResult to NULL and returns:
-  * INITIALIZATION_ERROR
-  * BAD_PATH
-  * CONFLICTING_PATH
-  * NO_SUCH_PATH
-  * MEMORY_ERROR
+  Otherwise findNode sets *poNResult to NULL and returns:
+  INITIALIZATION_ERROR, BAD_PATH, CONFLICTING_PATH, NO_SUCH_PATH, 
+  or MEMORY_ERROR
 */
 static int FT_findNode(const char *pcPath, Node_T *poNResult) {
    Path_T oPPath = NULL;
@@ -163,23 +159,34 @@ static int FT_findNode(const char *pcPath, Node_T *poNResult) {
 }
 
 int FT_insertDir(const char *pcPath) {
+   /* status of helper function calls */
    int iStatus;
+   /* Path object for pcPath */
    Path_T oPPath = NULL;
+   /* first newly created node, for cleanup on failure */
    Node_T oNFirstNew = NULL;
+   /* current node reached in traversal/building */
    Node_T oNCurr = NULL;
+   /* depth of the directory path */
    size_t ulDepth;
+   /* current depth index being inserted */
    size_t ulIndex;
+   /* number of new nodes created */
    size_t ulNewNodes = 0;
 
    assert(pcPath != NULL);
 
-   if(!bIsInitialized)
+   if(!bIsInitialized) {
       return INITIALIZATION_ERROR;
+   }
 
+   /* create a new path object for the directory path */
    iStatus = Path_new(pcPath, &oPPath);
-   if(iStatus != SUCCESS)
+   if(iStatus != SUCCESS) {
       return iStatus;
+   }
 
+   /* traverse as far as possible toward the target path */
    iStatus = FT_traversePath(oPPath, &oNCurr);
    if(iStatus != SUCCESS) {
       Path_free(oPPath);
@@ -191,24 +198,29 @@ int FT_insertDir(const char *pcPath) {
       return CONFLICTING_PATH;
    }
 
+   /* if the tree is empty, insertion starts at the root,
+   otherwise, start 1 level below the furthest existing node */
    ulDepth = Path_getDepth(oPPath);
    if(oNCurr == NULL)
       ulIndex = 1;
    else {
       ulIndex = Path_getDepth(Node_getPath(oNCurr)) + 1;
 
+      /* path already exists in the tree */
       if(ulIndex == ulDepth + 1 &&
          !Path_comparePath(oPPath, Node_getPath(oNCurr))) {
          Path_free(oPPath);
          return ALREADY_IN_TREE;
       }
 
+      /* file cannot have children */
       if(Node_isFile(oNCurr)) {
          Path_free(oPPath);
          return NOT_A_DIRECTORY;
       }
    }
 
+   /* create each missing directory node along the path */
    while(ulIndex <= ulDepth) {
       Path_T oPPrefix = NULL;
       Node_T oNNewNode = NULL;
@@ -221,6 +233,7 @@ int FT_insertDir(const char *pcPath) {
          return iStatus;
       }
 
+       /* create a new directory node and link it into the tree */
       iStatus = Node_new(oPPrefix, oNCurr, FALSE, NULL, 0, &oNNewNode);
       if(iStatus != SUCCESS) {
          Path_free(oPPath);
@@ -230,18 +243,23 @@ int FT_insertDir(const char *pcPath) {
          return iStatus;
       }
 
+      /* advance to the newly created node */
       Path_free(oPPrefix);
       oNCurr = oNNewNode;
       ulNewNodes++;
-      if(oNFirstNew == NULL)
+
+      /* remember the first new node for cleanup on later failure */
+      if(oNFirstNew == NULL) {
          oNFirstNew = oNCurr;
+      }
       ulIndex++;
    }
 
    Path_free(oPPath);
 
-   if(oNRoot == NULL)
+   if(oNRoot == NULL) {
       oNRoot = oNFirstNew;
+   }
    ulCount += ulNewNodes;
 
    return SUCCESS;
@@ -279,12 +297,19 @@ int FT_rmDir(const char *pcPath) {
 
 int FT_insertFile(const char *pcPath, void *pvContents,
    size_t ulLength) {
+   /* status of helper function calls */
    int iStatus;
+   /* Path object for pcPath */
    Path_T oPPath = NULL;
+   /* first newly created node, for cleanup on failure */
    Node_T oNFirstNew = NULL;
+   /* current node reached in traversal/building */
    Node_T oNCurr = NULL;
+   /* depth of the file path */
    size_t ulDepth;
+   /* current depth index being inserted */
    size_t ulIndex;
+   /* number of new nodes created */
    size_t ulNewNodes = 0;
 
    assert(pcPath != NULL);
@@ -304,17 +329,21 @@ int FT_insertFile(const char *pcPath, void *pvContents,
       return CONFLICTING_PATH;
    }
 
+   /* create a Path object for the new file path */
    iStatus = FT_traversePath(oPPath, &oNCurr);
    if(iStatus != SUCCESS) {
       Path_free(oPPath);
       return iStatus;
    }
 
+    /* path conflicts with an existing root */
    if(oNCurr == NULL && oNRoot != NULL) {
       Path_free(oPPath);
       return CONFLICTING_PATH;
    }
 
+   /* if the tree is empty, insertion starts at the root, otherwise
+   insertion starts 1 level below furthest existing node */
    if(oNCurr == NULL)
       ulIndex = 1;
    else {
@@ -332,11 +361,17 @@ int FT_insertFile(const char *pcPath, void *pvContents,
       }
    }
 
+   /* create each missing node along the path */
    while(ulIndex <= ulDepth) {
+      /* prefix path for the node to create at this depth */
       Path_T oPPrefix = NULL;
+      /* newly created node at this depth */
       Node_T oNNewNode = NULL;
+      /* TRUE only for the final node, which is the file */
       boolean bIsFile;
+      /* contents pointer to store in the new node */
       void *pvNodeContents;
+      /* contents length to store in the new node */
       size_t ulNodeLength;
 
       if(ulIndex == ulDepth)
@@ -361,8 +396,9 @@ int FT_insertFile(const char *pcPath, void *pvContents,
          return iStatus;
       }
 
+      /* create the new node and link it into the tree */
       iStatus = Node_new(oPPrefix, oNCurr, bIsFile,
-                         pvNodeContents, ulNodeLength, &oNNewNode);
+         pvNodeContents, ulNodeLength, &oNNewNode);
       if(iStatus != SUCCESS) {
          Path_free(oPPath);
          Path_free(oPPrefix);
@@ -381,8 +417,10 @@ int FT_insertFile(const char *pcPath, void *pvContents,
 
    Path_free(oPPath);
 
-   if(oNRoot == NULL)
+   /* if the tree was empty, the first new node is now the root */
+   if(oNRoot == NULL) {
       oNRoot = oNFirstNew;
+   }
 
    ulCount += ulNewNodes;
    return SUCCESS;
@@ -546,8 +584,9 @@ static size_t FT_preOrderTraversal(Node_T oNNode, DynArray_T oDNodes,
 static void FT_strlenAccumulate(Node_T oNNode, size_t *pulAcc) {
    assert(pulAcc != NULL);
 
-   if(oNNode != NULL)
+   if(oNNode != NULL) {
       *pulAcc += (Path_getStrLength(Node_getPath(oNNode)) + 1);
+   }
 }
 
 /*
@@ -568,12 +607,14 @@ char *FT_toString(void) {
    size_t totalStrlen = 1;
    char *result = NULL;
 
-   if(!bIsInitialized)
+   if(!bIsInitialized) {
       return NULL;
+   }
 
    nodes = DynArray_new(ulCount);
-   if(nodes == NULL)
+   if(nodes == NULL) {
       return NULL;
+   }
 
    (void)FT_preOrderTraversal(oNRoot, nodes, 0);
 
