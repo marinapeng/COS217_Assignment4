@@ -168,7 +168,15 @@ your disagreements with them? Copy the critTer warnings here, and
 express your disagreement after each warning. If there are no
 warnings, then write "None."
 
-None
+ft.c: line 277: medium priority:
+   Do you want to validate 'pvContents' through an assert?
+
+ft.c: line 434: medium priority:
+   Do you want to validate 'pvNewContents' through an assert?
+
+I left these errors on critTer because the contents of a file
+can be NULL (as shown through ft_client.c), thus I did not want
+to validate pvContents or pvNewContents through an assert.
 
 ------------------------------------------------------------------------
 For each of the five faulty BDT implementations required by Step
