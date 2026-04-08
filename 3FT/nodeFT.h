@@ -9,9 +9,7 @@
 #include "a4def.h"
 #include "path.h"
 
-/*
-  Opaque pointer type for a node in the FT.
-*/
+/* Opaque pointer type for a node in the FT. */
 typedef struct node *Node_T;
 
 /*
@@ -20,7 +18,7 @@ typedef struct node *Node_T;
   If bIsFile is TRUE, creates a file node with initial contents
   pvContents (which may be NULL) and content length ulLength.
 
-  If bIsFile is FALSE, creates a directory node. In that case,
+  If bIsFile is FALSE, creates a directory node and
   pvContents and ulLength are ignored.
 
   Returns SUCCESS and sets *poNResult to the new node if successful.
@@ -37,54 +35,43 @@ typedef struct node *Node_T;
   must be a directory of depth 1.
 */
 int Node_new(Path_T oPPath, Node_T oNParent, boolean bIsFile,
-             void *pvContents, size_t ulLength, Node_T *poNResult);
+  void *pvContents, size_t ulLength, Node_T *poNResult);
 
 /*
   Frees oNNode, removing it from its parent's children array.
   If oNNode is a directory, recursively frees its subtree.
 
-  Does NOT free a file node's contents -- those are owned by the
+  Does NOT free a file node's contents because those are owned by the
   client.
 
   Returns the number of nodes freed.
 */
 size_t Node_free(Node_T oNNode);
 
-/*
-  Returns the path of oNNode.
-*/
+/* Returns the path of oNNode. */
 Path_T Node_getPath(Node_T oNNode);
 
-/*
-  Returns the parent of oNNode.
-  Returns NULL iff oNNode is the root.
-*/
+/* Returns the parent of oNNode.
+  Returns NULL if oNNode is the root. */
 Node_T Node_getParent(Node_T oNNode);
 
-/*
-  Returns TRUE iff oNNode is a file.
-*/
+/* Returns TRUE if oNNode is a file. */
 boolean Node_isFile(Node_T oNNode);
 
 /*
-  Returns TRUE iff oNNode is a directory.
+  Returns TRUE if oNNode is a directory.
 */
 boolean Node_isDir(Node_T oNNode);
 
-/*
-  Returns TRUE iff directory oNParent has a child whose path is oPPath,
+/* Returns TRUE if directory oNParent has a child whose path is oPPath,
   and in that case sets *pulChildID to that child's index in the
-  children array.
-
-  Returns FALSE otherwise.
-
+  children array. Returns FALSE otherwise.
   If oNParent is a file, always returns FALSE.
 */
 boolean Node_hasChild(Node_T oNParent, Path_T oPPath,
                       size_t *pulChildID);
 
-/*
-  Returns the number of children of directory oNParent.
+/* Returns the number of children of directory oNParent.
   Returns 0 if oNParent is a file.
 */
 size_t Node_getNumChildren(Node_T oNParent);
@@ -101,10 +88,9 @@ int Node_getChild(Node_T oNParent, size_t ulChildID,
                   Node_T *poNResult);
 
 /*
-  Returns the contents of file oNNode. May legitimately be NULL --
-  callers cannot use a NULL return value to detect errors.
-
-  Returns NULL as well if oNNode is a directory.
+  Returns the contents of file oNNode.
+  Returns NULL if oNNode is a directory or actual
+  contents are NULL.
 */
 void *Node_getContents(Node_T oNNode);
 
@@ -115,19 +101,18 @@ void *Node_getContents(Node_T oNNode);
 size_t Node_getLength(Node_T oNNode);
 
 /*
-  Replaces file oNNode's contents with pvNewContents (which may be NULL)
+  Replaces file oNNode's contents with pvNewContents
   and updates its stored length to ulNewLength. Returns the previous
-  contents pointer, transferring ownership of that memory back to
-  the caller.
-
-  Returns NULL if oNNode is a directory.
+  contents pointer. Returns NULL if oNNode is a directory or new
+  contents are NULL.
 */
 void *Node_replaceContents(Node_T oNNode, void *pvNewContents,
-                           size_t ulNewLength);
+  size_t ulNewLength);
 
 /*
   Compares oNFirst and oNSecond lexicographically by path.
-  Returns <0, 0, or >0 as usual.
+  Returns <0, 0, or >0 as usual. FT_toString imposes
+  "files before directories" separately.
 */
 int Node_compare(Node_T oNFirst, Node_T oNSecond);
 
