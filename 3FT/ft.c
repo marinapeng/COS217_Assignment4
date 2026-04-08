@@ -402,16 +402,18 @@ int FT_insertFile(const char *pcPath, void *pvContents,
       if(iStatus != SUCCESS) {
          Path_free(oPPath);
          Path_free(oPPrefix);
-         if(oNFirstNew != NULL)
+         if(oNFirstNew != NULL) {
             (void)Node_free(oNFirstNew);
+         }
          return iStatus;
       }
 
       Path_free(oPPrefix);
       oNCurr = oNNewNode;
       ulNewNodes++;
-      if(oNFirstNew == NULL)
+      if(oNFirstNew == NULL) {
          oNFirstNew = oNCurr;
+      }
       ulIndex++;
    }
 
@@ -443,15 +445,18 @@ int FT_rmFile(const char *pcPath) {
    assert(pcPath != NULL);
 
    iStatus = FT_findNode(pcPath, &oNFound);
-   if(iStatus != SUCCESS)
+   if(iStatus != SUCCESS) {
       return iStatus;
+   }
 
-   if(Node_isDir(oNFound))
+   if(Node_isDir(oNFound)) {
       return NOT_A_FILE;
+   }
 
    ulCount -= Node_free(oNFound);
-   if(ulCount == 0)
+   if(ulCount == 0) {
       oNRoot = NULL;
+   }
 
    return SUCCESS;
 }
@@ -463,11 +468,13 @@ void *FT_getFileContents(const char *pcPath) {
    assert(pcPath != NULL);
 
    iStatus = FT_findNode(pcPath, &oNFound);
-   if(iStatus != SUCCESS)
+   if(iStatus != SUCCESS) {
       return NULL;
+   }
 
-   if(Node_isDir(oNFound))
+   if(Node_isDir(oNFound)) {
       return NULL;
+   }
 
    return Node_getContents(oNFound);
 }
@@ -480,11 +487,13 @@ void *FT_replaceFileContents(const char *pcPath, void *pvNewContents,
    assert(pcPath != NULL);
 
    iStatus = FT_findNode(pcPath, &oNFound);
-   if(iStatus != SUCCESS)
+   if(iStatus != SUCCESS) {
       return NULL;
+   }
 
-   if(Node_isDir(oNFound))
+   if(Node_isDir(oNFound)) {
       return NULL;
+   }
 
    return Node_replaceContents(oNFound, pvNewContents, ulNewLength);
 }
@@ -514,8 +523,9 @@ int FT_stat(const char *pcPath, boolean *pbIsFile, size_t *pulSize) {
 
 int FT_init(void) {
 
-   if(bIsInitialized)
+   if(bIsInitialized) {
       return INITIALIZATION_ERROR;
+   }
 
    bIsInitialized = TRUE;
    oNRoot = NULL;
@@ -525,8 +535,9 @@ int FT_init(void) {
 }
 
 int FT_destroy(void) {
-   if(!bIsInitialized)
+   if(!bIsInitialized) {
       return INITIALIZATION_ERROR;
+   }
 
    if(oNRoot != NULL) {
       ulCount -= Node_free(oNRoot);
@@ -558,18 +569,32 @@ static size_t FT_preOrderTraversal(Node_T oNNode, DynArray_T oDNodes,
       (void)DynArray_set(oDNodes, ulNextIndex, oNNode);
       ulNextIndex++;
 
-      if(Node_isFile(oNNode))
+      if(Node_isFile(oNNode)) {
          return ulNextIndex;
+      }
 
       ulNumChildren = Node_getNumChildren(oNNode);
 
-      /* visit children in stored lexicographic order */
+      /* first visit file children */
       for(ulChildIndex = 0; ulChildIndex < ulNumChildren;
          ulChildIndex++) {
          iStatus = Node_getChild(oNNode, ulChildIndex, &oNChild);
          assert(iStatus == SUCCESS);
-         ulNextIndex = FT_preOrderTraversal(oNChild, oDNodes,
-            ulNextIndex);
+         if(Node_isFile(oNChild)) {
+            ulNextIndex = FT_preOrderTraversal(oNChild, oDNodes,
+               ulNextIndex);
+         }
+      }
+
+      /* then visit directory children */
+      for(ulChildIndex = 0; ulChildIndex < ulNumChildren;
+         ulChildIndex++) {
+         iStatus = Node_getChild(oNNode, ulChildIndex, &oNChild);
+         assert(iStatus == SUCCESS);
+         if(Node_isDir(oNChild)) {
+            ulNextIndex = FT_preOrderTraversal(oNChild, oDNodes,
+               ulNextIndex);
+         }
       }
    }
 

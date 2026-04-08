@@ -329,18 +329,12 @@ void *Node_replaceContents(Node_T oNNode, void *pvNewContents,
 }
 
 
-/*
-  Pure lexicographic compare by path only.
-  This is intentional: child arrays are kept in lexicographic order,
-  and FT_toString can impose "files before directories" separately.
-*/
 int Node_compare(Node_T oNFirst, Node_T oNSecond) {
    assert(oNFirst != NULL);
    assert(oNSecond != NULL);
 
    return Path_comparePath(oNFirst->oPPath, oNSecond->oPPath);
 }
-
 
 char *Node_toString(Node_T oNNode) {
    char *copyPath;
