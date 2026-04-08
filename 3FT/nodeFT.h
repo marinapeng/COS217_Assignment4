@@ -23,27 +23,23 @@ typedef struct node *Node_T;
 
   Returns SUCCESS and sets *poNResult to the new node if successful.
   Otherwise sets *poNResult to NULL and returns:
-  * MEMORY_ERROR if memory could not be allocated
-  * CONFLICTING_PATH if oNParent's path is not an ancestor of oPPath
-  * NO_SUCH_PATH if oPPath is of depth 0, or oNParent is not the
-    direct parent of oPPath, or oNParent is NULL but oPPath is not
-    a valid root path, or a file is requested as the FT root
-  * ALREADY_IN_TREE if oNParent already has a child with this path
-  * NOT_A_DIRECTORY if oNParent is a file
+  MEMORY_ERROR if memory could not be allocated
+  CONFLICTING_PATH if oNParent's path is not an ancestor of oPPath
+  NO_SUCH_PATH if oPPath is of depth 0, or oNParent is not the
+  direct parent of oPPath, or oNParent is NULL but oPPath is not
+  a valid root path, or a file is requested as the FT root
+  ALREADY_IN_TREE if oNParent already has a child with this path
+  NOT_A_DIRECTORY if oNParent is a file
 
-  If oNParent is NULL, the new node must be the FT root, and thus
-  must be a directory of depth 1.
+  If oNParent is NULL, the new node must be the root, and must be a directory.
 */
 int Node_new(Path_T oPPath, Node_T oNParent, boolean bIsFile,
   void *pvContents, size_t ulLength, Node_T *poNResult);
 
 /*
   Frees oNNode, removing it from its parent's children array.
-  If oNNode is a directory, recursively frees its subtree.
-
-  Does NOT free a file node's contents because those are owned by the
-  client.
-
+  If oNNode is a directory, recursively frees its subtree. Does not
+  free a file node's contents because those are owned by the client.
   Returns the number of nodes freed.
 */
 size_t Node_free(Node_T oNNode);
